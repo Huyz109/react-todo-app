@@ -2,26 +2,11 @@ import React from "react";
 import Header from "./layout/Header";
 import TodoInput from "./TodoInput";
 import TodoList from "./TodoList";
+import axios from "axios";
 
 class TodoApp extends React.Component {
     state = {
-        todoList: [
-            {
-                id: 1,
-                title: "Setup development environment",
-                completed: true,
-            },
-            {
-                id: 2,
-                title: "Develop website and add content",
-                completed: false,
-            },
-            {
-                id: 3,
-                title: "Deploy to live server",
-                completed: false,
-            }
-        ]
+        todoList: []
     }
 
     handleCheckboxChange = (id) => {
@@ -36,11 +21,15 @@ class TodoApp extends React.Component {
     }
 
     deleteItem = (id) => {
-        this.setState({
-            todoList: this.state.todoList.filter(todo => {
-                return todo.id !== id;
-            })
-        })
+        axios.delete(`https://jsonplaceholder.typicode.com/todos/${id}`)
+            .then(response => this.setState({
+                    todoList: [
+                        ...this.state.todoList.filter(todo => {
+                            return todo.id !== id;
+                    })
+                ]
+                })
+            )
     }
     
     addTodo = (title) => {
@@ -49,9 +38,24 @@ class TodoApp extends React.Component {
             title: title,
             completed: false,
         }
-        this.setState({
-            todoList: [...this.state.todoList,newTodo]
-        })
+        axios.post("https://jsonplaceholder.typicode.com/todos", newTodo)
+            .then(response => {
+                console.log(response.data)
+                this.setState({
+                    todoList: [...this.state.todoList, response.data]
+                })
+            })
+    }
+
+    componentDidMount() {
+        const config = {
+            params: {
+                _limit: 5
+            }
+        }
+        // Create GET request to get todos list
+        axios.get("https://jsonplaceholder.typicode.com/todos", config)
+            .then(response => this.setState({todoList: response.data}));
     }
 
     render() {
